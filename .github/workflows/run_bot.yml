@@ -1,0 +1,40 @@
+name: AIS Play Bot
+
+on:
+  workflow_dispatch: # ทำให้มีปุ่มกดสั่งรันเองแบบ Manual ได้บนเว็บ GitHub
+  schedule:
+    - cron: '0 0 * * *' # สั่งบอทรันอัตโนมัติให้ทุกวันตอนเที่ยงคืน (ปรับเปลี่ยนได้)
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. ดึงโค้ดจากโปรเจกต์ของคุณออกมา
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. เตรียมระบบ Python 3.11
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    # 3. ติดตั้ง Library และ Browser (รันบน GitHub จะเสถียรมาก ไม่ติดเรื่องชิปมือถือ)
+    - name: Install dependencies
+      run: |
+        pip install playwright
+        playwright install chromium
+
+    # 4. สั่งรันบอทของคุณ
+    - name: Run AIS Bot
+      run: python ais.py
+
+    # 5. สั่งให้เซฟไฟล์ test_channels.json กลับเข้าคลัง GitHub ของคุณ
+    - name: Commit and Push changes
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add test_channels.json
+        git commit -m "🤖 บอทอัปเดตช่อง 2 และ 3 อัตโนมัติ" || echo "ไม่มีการเปลี่ยนแปลง"
+        git push
